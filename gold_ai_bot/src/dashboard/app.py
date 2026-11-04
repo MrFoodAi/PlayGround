@@ -446,6 +446,71 @@ HTML_TEMPLATE = """
         <input type="number" id="intervallo_aggiornamento_secondi" name="intervallo_aggiornamento_secondi" step="5" min="5" max="3600">
       </div>
     </div>
+
+    <hr style="border:0; border-top:1px solid #334155; margin:14px 0;">
+
+    <h4 style="color:#93c5fd; margin:0 0 8px; font-size:14px;">🧠 AI LLM gratuita (professionale)</h4>
+    <div class="row">
+      <div>
+        <label>Attiva LLM</label>
+        <select id="usa_llm" name="usa_llm">
+          <option value="false">No</option>
+          <option value="true">Sì</option>
+        </select>
+      </div>
+      <div>
+        <label>Provider</label>
+        <select id="llm_provider" name="llm_provider">
+          <option value="ollama">Ollama (locale, gratuito)</option>
+          <option value="hf">HuggingFace (API gratuita)</option>
+          <option value="disabled">Disabilitato</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Modello</label>
+        <input type="text" id="llm_modello" name="llm_modello" placeholder="es. llama3">
+      </div>
+      <div>
+        <label>Endpoint</label>
+        <input type="text" id="llm_endpoint" name="llm_endpoint" placeholder="http://localhost:11434">
+      </div>
+    </div>
+    <div style="margin-bottom:4px;">
+      <label>API Key (solo HuggingFace)</label>
+      <input type="password" id="llm_api_key" name="llm_api_key" placeholder="••••••••">
+      <div class="hint">Non salvata in chiaro su disco se possibile; usa variabili d'ambiente in produzione.</div>
+    </div>
+
+    <hr style="border:0; border-top:1px solid #334155; margin:14px 0;">
+
+    <h4 style="color:#f87171; margin:0 0 8px; font-size:14px;">⚠️ Firma transazioni reali (pericoloso)</h4>
+    <div class="row">
+      <div>
+        <label>Abilita firma reale on-chain</label>
+        <select id="abilitata_firma_reale" name="abilitata_firma_reale">
+          <option value="false">No (solo paper trading)</option>
+          <option value="true">Sì (TRADING REALE)</option>
+        </select>
+      </div>
+      <div>
+        <label>Chain ID</label>
+        <input type="number" id="chain_id" name="chain_id" step="1" value="1">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Gas max (gwei)</label>
+        <input type="number" id="gas_max_gwei" name="gas_max_gwei" step="1" value="100">
+      </div>
+      <div>
+        <label>Slippage (%)</label>
+        <input type="number" id="slippage_percent" name="slippage_percent" step="0.1" value="0.5">
+      </div>
+    </div>
+    <p class="pericolo" style="margin:8px 0 0;">Attivare la firma reale invierà transazioni firmate con la chiave privata configurata. Puoi perdere fondi.</p>
+
     <div style="display:flex; gap:8px; margin-top:12px;">
       <button type="button" class="btn btn--ghost" onclick="resetImpostazioni()">Ripristina default</button>
       <button type="submit" class="btn btn-salva">Salva impostazioni</button>
@@ -579,6 +644,20 @@ async function caricaImpostazioni(){
     document.getElementById('max_posizioni_concorrenti').value = imp.max_posizioni_concorrenti ?? 5;
     document.getElementById('intervallo_aggiornamento_secondi').value = imp.intervallo_aggiornamento_secondi ?? 60;
     document.getElementById('tema').value = imp.tema ?? 'scuro';
+
+    // LLM
+    document.getElementById('usa_llm').value = imp.usa_llm ? 'true' : 'false';
+    document.getElementById('llm_provider').value = imp.llm_provider ?? 'ollama';
+    document.getElementById('llm_modello').value = imp.llm_modello ?? 'llama3';
+    document.getElementById('llm_endpoint').value = imp.llm_endpoint ?? 'http://localhost:11434';
+    document.getElementById('llm_api_key').value = imp.llm_api_key ?? '';
+
+    // Firma reale
+    document.getElementById('abilitata_firma_reale').value = imp.abilitata_firma_reale ? 'true' : 'false';
+    document.getElementById('chain_id').value = imp.chain_id ?? 1;
+    document.getElementById('gas_max_gwei').value = imp.gas_max_gwei ?? 100;
+    document.getElementById('slippage_percent').value = imp.slippage_percent ?? 0.5;
+
     document.getElementById('msg-impostazioni').textContent = '';
     renderStrategie();
   }catch(e){
@@ -642,6 +721,19 @@ async function salvaImpostazioni(e){
     lingua: 'it',
     tema: fd.get('tema'),
     notifiche_attive: false,
+
+    // LLM
+    usa_llm: fd.get('usa_llm') === 'true',
+    llm_provider: fd.get('llm_provider'),
+    llm_modello: fd.get('llm_modello'),
+    llm_endpoint: fd.get('llm_endpoint'),
+    llm_api_key: fd.get('llm_api_key'),
+
+    // Firma reale
+    abilitata_firma_reale: fd.get('abilitata_firma_reale') === 'true',
+    chain_id: parseInt(fd.get('chain_id') || 1),
+    gas_max_gwei: parseInt(fd.get('gas_max_gwei') || 100),
+    slippage_percent: parseFloat(fd.get('slippage_percent') || 0.5),
   };
   try{
     const r = await fetch('/impostazioni', {method:'POST', headers:{'Content-Type':'application/json', 'Credentials':'include'}, body: JSON.stringify(dati), credentials:'same-origin'});

@@ -85,3 +85,17 @@ sicurezza:
   blocca_modalita_reale_senza_env: true
   never_save_private_key: true
   allowed_origins: ["http://localhost:8080", "https://localhost:8080"]
+
+llm:
+  usa_llm: false
+  provider: "ollama"             # ollama | hf | disabled
+  modello: "llama3"              # es. llama3, mistral, phi3, gemma
+  endpoint: "http://localhost:11434"
+  api_key: "${LLM_API_KEY}"
+  timeout_secondi: 30
+
+firma_transazioni:
+  abilitata_firma_reale: false   # ⚠️ metti true SOLO per trading reale con fondi veri
+  chain_id: 1                    # 1=Ethereum, 137=Polygon, 56=BSC
+  gas_max_gwei: 100              # blocca invio se gas superiore
+  slippage_percent: 0.5

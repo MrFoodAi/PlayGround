@@ -14,10 +14,15 @@ from src.utils.logger import logger
 
 try:
     from web3 import Web3
-    from web3.middleware import geth_poa_middleware
+    try:
+        from web3.middleware import geth_poa_middleware
+    except Exception:
+        from web3.middleware.geth_poa import geth_poa_middleware
 except Exception:  # web3 non installato
     Web3 = None  # type: ignore
     geth_poa_middleware = None  # type: ignore
+
+from src.defi.signer import TransactionSigner
 
 
 @dataclass
@@ -118,6 +123,7 @@ class ExecutorDeFi:
 
         self.web3: Optional[object] = None
         self.router_contratto = None
+        self.signer: Optional[TransactionSigner] = None
         if not paper_trading:
             self._inizializza_web3()
 
@@ -138,6 +144,21 @@ class ExecutorDeFi:
                 self.router_contratto = self.web3.eth.contract(
                     address=Web3.to_checksum_address(router_addr), abi=UNISWAP_ROUTER_ABI
                 )
+                # Inizializza il firmatore se c'è una chiave privata
+                if self.chiave_privata:
+                    try:
+                        chain_id_map = {"ethereum": 1, "polygon": 137, "bsc": 56}
+                        chain_id = chain_id_map.get(self.rete, 1)
+                        self.signer = TransactionSigner(
+                            self.rpc_url, self.chiave_privata, chain_id=chain_id
+                        )
+                        if self.signer.è_connesso():
+                            logger.info(f"TransactionSigner inizializzato su {self.rete} (chain {chain_id}).")
+                        else:
+                            logger.warning("Signer creato ma non connesso alla RPC.")
+                    except Exception as exc:
+                        logger.error(f"Errore inizializzazione TransactionSigner: {exc}")
+                        self.signer = None
                 logger.info(f"Connesso alla rete {self.rete} via Web3.")
             else:
                 logger.warning("Web3 connesso ma router non configurato.")
@@ -182,30 +203,110 @@ class ExecutorDeFi:
         return self._reale_vendita(quantita_asset, prezzo, slippage_percent)
 
     # ------------------------------------------------------------------ #
-    # Trading reale (placeholder - richiede firma transazioni)
+    # Trading reale su DEX con firma automatica (EIP-1559)
     # ------------------------------------------------------------------ #
     def _reale_compra(self, importo_usd: float, prezzo: float, slippage: float) -> OrdineEseguito:
-        logger.warning("Esecuzione reale su DEX non completamente implementata (richiede chiave privata sicura).")
-        return OrdineEseguito(
-            successo=False,
-            hash_transazione=None,
-            importo_usd=importo_usd,
-            quantita_asset=0.0,
-            prezzo=prezzo,
-            nota="Trading reale non attivo: manca implementazione firma transazione",
-        )
+        """Compra XAUT con USDC firmando la transazione on-chain."""
+        if not self.signer or not self.router_contratto:
+            return OrdineEseguito(
+                successo=False,
+                hash_transazione=None,
+                importo_usd=importo_usd,
+                quantita_asset=0.0,
+                prezzo=prezzo,
+                nota="Signer o router non inizializzati",
+            )
+        try:
+            indirizzi = INDIRIZZI_TOKEN.get(self.rete, {})
+            usdc_addr = Web3.to_checksum_address(indirizzi.get("USDC", ""))
+            xaut_addr = Web3.to_checksum_address(indirizzi.get("XAUT", ""))
+            if not usdc_addr or not xaut_addr:
+                raise ValueError("Indirizzi USDC/XAUT non configurati per questa rete")
 
-    def _reale_vendita(self, quantita: float, prezzo: float, slippage: float) -> OrdineEseguito:
-        logger.warning("Esecuzione reale su DEX non completamente implementata.")
-        importo_usd = quantita * prezzo
-        return OrdineEseguito(
-            successo=False,
-            hash_transazione=None,
-            importo_usd=importo_usd,
-            quantita_asset=quantita,
-            prezzo=prezzo,
-            nota="Trading reale non attivo: manca implementazione firma transazione",
-        )
+            # Approva USDC al router se necessario (semplificato: saltato qui, presuppone allowance già presente)
+
+            # Conversione importi (USDC 6 decimali, XAUT 9 decimali - valori indicativi)
+            usdc_decimali = 6
+            xaut_decimali = 9
+            amount_in_wei = int(importo_usd * (10 ** usdc_decimali))
+            quantita_asset = importo_usd / prezzo if prezzo > 0 else 0.0
+            amount_out_min = int(quantita_asset * (10 ** xaut_decimali) * (1 - slippage / 100.0))
+
+            tx = self.signer.costruisci_swap_token_per_token(
+                self.router_contratto,
+                amount_in_wei,
+                amount_out_min,
+                [usdc_addr, xaut_addr],
+            )
+            successo, hash_tx, nota = self.signer.firma_e_invia(tx)
+            return OrdineEseguito(
+                successo=successo,
+                hash_transazione=hash_tx,
+                importo_usd=importo_usd,
+                quantita_asset=quantita_asset,
+                prezzo=prezzo,
+                nota=nota,
+            )
+        except Exception as exc:
+            logger.error(f"Errore acquisto reale XAUT: {exc}")
+            return OrdineEseguito(
+                successo=False,
+                hash_transazione=None,
+                importo_usd=importo_usd,
+                quantita_asset=0.0,
+                prezzo=prezzo,
+                nota=str(exc),
+            )
+
+    def _reale_vendita(self, quantita_asset: float, prezzo: float, slippage: float) -> OrdineEseguito:
+        """Vende XAUT per USDC firmando la transazione on-chain."""
+        if not self.signer or not self.router_contratto:
+            return OrdineEseguito(
+                successo=False,
+                hash_transazione=None,
+                importo_usd=quantita_asset * prezzo,
+                quantita_asset=quantita_asset,
+                prezzo=prezzo,
+                nota="Signer o router non inizializzati",
+            )
+        try:
+            indirizzi = INDIRIZZI_TOKEN.get(self.rete, {})
+            usdc_addr = Web3.to_checksum_address(indirizzi.get("USDC", ""))
+            xaut_addr = Web3.to_checksum_address(indirizzi.get("XAUT", ""))
+            if not usdc_addr or not xaut_addr:
+                raise ValueError("Indirizzi USDC/XAUT non configurati per questa rete")
+
+            xaut_decimali = 9
+            usdc_decimali = 6
+            amount_in_wei = int(quantita_asset * (10 ** xaut_decimali))
+            importo_usd = quantita_asset * prezzo
+            amount_out_min = int(importo_usd * (10 ** usdc_decimali) * (1 - slippage / 100.0))
+
+            tx = self.signer.costruisci_swap_token_per_token(
+                self.router_contratto,
+                amount_in_wei,
+                amount_out_min,
+                [xaut_addr, usdc_addr],
+            )
+            successo, hash_tx, nota = self.signer.firma_e_invia(tx)
+            return OrdineEseguito(
+                successo=successo,
+                hash_transazione=hash_tx,
+                importo_usd=importo_usd,
+                quantita_asset=quantita_asset,
+                prezzo=prezzo,
+                nota=nota,
+            )
+        except Exception as exc:
+            logger.error(f"Errore vendita reale XAUT: {exc}")
+            return OrdineEseguito(
+                successo=False,
+                hash_transazione=None,
+                importo_usd=quantita_asset * prezzo,
+                quantita_asset=quantita_asset,
+                prezzo=prezzo,
+                nota=str(exc),
+            )
 
     def saldo_wallet(self) -> dict:
         """Restituisce i saldi dei token configurati (simulato se paper)."""

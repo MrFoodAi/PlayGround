@@ -56,6 +56,15 @@ gold_ai_bot/
   - Rete blockchain (Ethereum / Polygon / BSC).
   - Indirizzo wallet, RPC URL.
   - Saldo USDC e XAUT (simulato in paper trading).
+- **AI LLM gratuita professionale** (`src/ai/llm_motore.py`):
+  - **Ollama** (locale, gratuito): installa Ollama e un modello es. `ollama run llama3`.
+  - **HuggingFace Inference API** (tier gratuito): API key gratuita da huggingface.co.
+  - Il LLM analizza RSI, MACD, Bollinger, SMA e conferma o blocca i segnali tecnici.
+- **Firma automatica transazioni on-chain** (`src/defi/signer.py`):
+  - Firma ed invia transazioni EIP-1559 su DEX (Uniswap-style).
+  - Gestione nonce automatica, gas dinamico, slippage configurabile.
+  - ⚠️ Attivabile solo impostando `abilitata_firma_reale: true` e `REAL_TRADING_ENABLED=true`.
+- **Sicurezza**: login dashboard, password hashata, rate limiting, headers di sicurezza, chiave privata mai salvata su disco.
 - Tutte le modifiche si applicano a caldo al motore in esecuzione e vengono salvate in `impostazioni_utente.json`.
 
 ## 🚀 Installazione e avvio rapido
@@ -126,6 +135,60 @@ Il motore combina tre componenti:
 Se la confidenza è sotto la soglia configurata, il bot resta in **HOLD** (non apre posizioni).
 
 ---
+
+## 🧠 AI LLM gratuita professionale
+
+Il bot può avvalersi di un LLM gratuito per confermare i segnali tecnici:
+
+| Provider | Costo | Requisiti |
+|----------|-------|-----------|
+| **Ollama** (locale) | Gratuito | `ollama` installato + modello es. `llama3` |
+| **HuggingFace** | Tier gratuito | API key gratuita da huggingface.co |
+
+### Attivare Ollama (consigliato, privato e gratuito)
+```bash
+# Installa Ollama: https://ollama.ai
+ollama run llama3
+```
+Poi in `config.yaml`:
+```yaml
+llm:
+  usa_llm: true
+  provider: "ollama"
+  modello: "llama3"
+  endpoint: "http://localhost:11434"
+```
+
+### Attivare HuggingFace
+```yaml
+llm:
+  usa_llm: true
+  provider: "hf"
+  modello: "meta-llama/Meta-Llama-3-8B-Instruct"
+  api_key: "TUA_HF_API_KEY"
+```
+
+Il LLM riceve i dati tecnici (RSI, MACD, Bollinger, SMA) e può:
+- Confermare un segnale BUY/SELL tecnico.
+- Bloccare l'operazione se ritiene il rischio ALTO.
+- Forzare HOLD se i segnali sono contrastanti.
+
+## ⚠️ Firma automatica transazioni on-chain
+
+Il modulo `src/defi/signer.py` può firmare e inviare automaticamente transazioni su DEX:
+
+- **EIP-1559**: maxFeePerGas e maxPriorityFeePerGas dinamici.
+- **Nonce automatico**: evita doppio invio o nonce errato.
+- **Slippage configurabile**: protezione contro esecuzioni a prezzo sfavorevole.
+- **Chain ID**: Ethereum (1), Polygon (137), BSC (56).
+
+### Attivare trading reale (pericoloso)
+1. Imposta `REAL_TRADING_ENABLED=true` in `.env`.
+2. Imposta `abilitata_firma_reale: true` in `config.yaml` o nella dashboard.
+3. Configura `PRIVATE_KEY` e `RPC_URL` corretti.
+4. Testa prima su **testnet** con fondi che puoi perdere.
+
+> La chiave privata **NON viene mai salvata su disco** dal backend: passa solo in memoria dalla variabile d'ambiente.
 
 ## 🛡️ Gestione del rischio
 

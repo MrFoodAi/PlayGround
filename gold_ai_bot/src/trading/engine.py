@@ -7,6 +7,7 @@ import time
 from typing import Optional
 
 from src.ai.motore import MotoreAI, Segnale
+from src.ai.llm_motore import LLMManager, conferma_con_llm
 from src.data.feed import FeedPrezzi, Indicatori
 from src.defi.connector import ExecutorDeFi, OrdineEseguito
 from src.trading.portfolio import Portafoglio, Posizione
@@ -48,6 +49,9 @@ class TradingEngine:
             chat_id=cfg.get("notifiche", {}).get("telegram_chat_id"),
             attive=bool(cfg.get("notifiche", {}).get("attive", False)),
         )
+
+        # LLM gratuito professionale
+        self.llm = LLMManager(cfg)
 
         self.in_esecuzione = False
         self.loop_task: Optional[asyncio.Task] = None
@@ -147,6 +151,17 @@ class TradingEngine:
         if "modalita_paper_trading" in imp:
             self.paper_trading = bool(imp["modalita_paper_trading"])
 
+        if "llm_provider" in imp:
+            self.llm.provider = imp["llm_provider"]
+        if "llm_modello" in imp:
+            self.llm.modello = imp["llm_modello"]
+        if "llm_endpoint" in imp:
+            self.llm.endpoint = imp["llm_endpoint"]
+        if "llm_api_key" in imp:
+            self.llm.api_key = imp["llm_api_key"]
+        if "usa_llm" in imp:
+            self.llm.attivo = bool(imp["usa_llm"])
+
         logger.info("Impostazioni applicate dal pannello di controllo.")
 
     # ------------------------------------------------------------------ #
@@ -176,7 +191,27 @@ class TradingEngine:
             logger.warning(f"Importo calcolato {importo_usd:.2f} USD sotto il minimo.")
             return
 
-        # Esecuzione su DeFi (simulata se paper trading)
+        # --- Conferma LLM (AI professionale gratuita) ---
+        parere_llm = None
+        if self.llm.disponibile():
+            parere_llm = self.llm.chiedi_segnale({
+                "prezzo": prezzo,
+                "rsi": segnale.indicatori.get("rsi", 50),
+                "macd": segnale.indicatori.get("macd", 0),
+                "macd_segnale": segnale.indicatori.get("macd_segnale", 0),
+                "sma_breve": segnale.indicatori.get("sma_breve", prezzo),
+                "sma_lungo": segnale.indicatori.get("sma_lungo", prezzo),
+                "bb_inferiore": segnale.indicatori.get("bb_inferiore", prezzo),
+                "bb_superiore": segnale.indicatori.get("bb_superiore", prezzo),
+                "trend": "rialzista" if prezzo > segnale.indicatori.get("sma_breve", prezzo) else "ribassista",
+            })
+            logger.info(f"Parere LLM: {parere_llm}")
+
+        if not conferma_con_llm(segnale.azione, parere_llm):
+            logger.info("Operazione bloccata dal filtro LLM o mancata conferma.")
+            return
+
+        # --- Esecuzione ordine (simulata se paper trading, reale firmata altrimenti) ---
         if segnale.azione == "BUY":
             ordine = self.executor.esegui_compra(importo_usd, prezzo)
         else:
@@ -229,6 +264,11 @@ class TradingEngine:
             "prezzo_attuale_usd": round(ultimo_prezzo, 2),
             "asset_defi": self.asset_defi,
             "ai_attivo": self.ai.attivo,
+            "llm_attivo": self.llm.attivo and self.llm.disponibile(),
+            "llm_provider": self.llm.provider,
+            "llm_modello": self.llm.modello,
+            "trading_reale": not self.paper_trading,
+            "signer_connesso": self.executor.signer.è_connesso() if self.executor.signer else False,
             "ultimo_segnale": {
                 "azione": ultimo_segnale.azione if ultimo_segnale else "N/D",
                 "confidenza": ultimo_segnale.confidenza if ultimo_segnale else 0.0,
