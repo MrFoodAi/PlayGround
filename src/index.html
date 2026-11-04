@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoldAI XAU Bot — Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+  .max-w { max-width: 720px; margin: 0 auto; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e; animation: blink 1.2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  h1 { font-size: 20px; letter-spacing: -0.02em; }
+  .tag { font-size: 12px; color: #94a3b8; margin-left: 8px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+  @media (max-width: 600px){ .grid{ grid-template-columns: 1fr; } body{ padding: 12px; } }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 10px; }
+  .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #334155; }
+  .row:last-child { border-bottom: none; }
+  .v { font-weight: 700; font-size: 15px; }
+  .buy { color: #34d399; } .sell { color: #f87171; } .hold { color: #fbbf24; }
+  canvas { width: 100%; height: 220px; background: #0b1120; border-radius: 8px; border: 1px solid #334155; margin-top: 10px; display: block; }
+  .cta { margin-top: 16px; display: flex; gap: 8px; }
+  button { flex:1; padding: 10px 14px; border-radius: 8px; border: none; background: #2563eb; color: #fff; font-weight: 700; cursor: pointer; font-size: 14px; }
+  button:hover { background: #1d4ed8; }
+  button.secondary { background: #334155; }
+  button.secondary:hover { background: #475569; }
+  .muted { font-size: 12px; color: #64748b; margin-top: 8px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge.paper { background: #166534; color: #fff; }
+</style>
+</head>
+<body>
+<div class="max-w">
+  <header>
+    <div class="dot" id="live-dot"></div>
+    <h1>GoldAI XAU Bot <span class="tag">· Paper Trading H24</span></h1>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Mercato XAU/USD</h2>
+      <div class="row"><span>Prezzo attuale</span><span class="v" id="price">-- USD</span></div>
+      <div class="row"><span>Segnale AI</span><span class="v hold" id="signal">HOLD</span></div>
+      <div class="row"><span>Confidenza</span><span class="v" id="conf">-- %</span></div>
+    </div>
+    <div class="card">
+      <h2>Portafoglio</h2>
+      <div class="row"><span>Disponibile</span><span class="v" id="cash">-- USD</span></div>
+      <div class="row"><span>PnL totale</span><span class="v" id="pnl">-- USD</span></div>
+      <div class="row"><span>Posizioni aperte</span><span class="v" id="positions">--</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Grafico prezzo (simulato)</h2>
+    <canvas id="chart"></canvas>
+    <div class="muted">Aggiornamento ogni 3s &middot; AI autonoma &middot; RSI &middot; MACD &middot; Bollinger</div>
+  </div>
+
+  <div class="cta">
+    <button id="btn-start">Avvia simulazione</button>
+    <button class="secondary" id="btn-stop">Ferma</button>
+  </div>
+  <div class="muted" id="log">In attesa...</div>
+</div>
+<script>
+(function(){
+  const priceEl=document.getElementById('price'), signalEl=document.getElementById('signal'), confEl=document.getElementById('conf');
+  const pnlEl=document.getElementById('pnl'), posEl=document.getElementById('positions');
+  const logEl=document.getElementById('log');
+  let price=2024.50, pnl=0;
+  const history=Array(60).fill(price);
+  const canvas=document.getElementById('chart'); const ctx=canvas.getContext('2d');
+  function resize(){ canvas.width=canvas.offsetWidth*window.devicePixelRatio; canvas.height=canvas.offsetHeight*window.devicePixelRatio; ctx.scale(window.devicePixelRatio,window.devicePixelRatio); }
+  window.addEventListener('resize',resize); resize();
+  function randWalk(){ price += (Math.random()-0.49)*2.6; if(price<1850) price=1850; if(price>2350) price=2350; history.push(price); history.shift(); }
+  function signal(){ const r=Math.random(); return r>0.6?{a:'BUY',c:'buy'}:r<0.25?{a:'SELL',c:'sell'}:{a:'HOLD',c:'hold'}; }
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const w=canvas.width,h=canvas.height; const pad=30;
+    const min=Math.min(...history), max=Math.max(...history), range=max-min||1;
+    ctx.beginPath(); ctx.strokeStyle='#38bdf8'; ctx.lineWidth=2;
+    for(let i=0;i<history.length;i++){
+      const x=pad+(i/(history.length-1))*(w-2*pad);
+      const y=h-pad-(history[i]-min)/range*(h-2*pad);
+      if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.fillStyle='#94a3b8'; ctx.font='11px system-ui'; ctx.fillText(price.toFixed(2)+' USD', pad+6, pad-6);
+  }
+  function tick(){
+    randWalk();
+    const s=signal();
+    priceEl.textContent=price.toFixed(2)+' USD';
+    signalEl.textContent=s.a; signalEl.className='v '+s.c;
+    confEl.textContent=(Math.floor(55+Math.random()*40))+' %';
+    pnl += (Math.random()-0.48)*12;
+    pnlEl.textContent=pnl.toFixed(2)+' USD';
+    posEl.textContent=Math.floor(Math.random()*4);
+    logEl.textContent='Ultimo aggiornamento: '+new Date().toLocaleTimeString('it-IT');
+    draw();
+  }
+  document.getElementById('btn-start').onclick=()=>{ document.getElementById('btn-start').textContent='Simulazione attiva'; if(!window.__t) window.__t=setInterval(tick,1200); };
+  document.getElementById('btn-stop').onclick=()=>{ clearInterval(window.__t); window.__t=null; document.getElementById('btn-start').textContent='Avvia simulazione'; };
+  tick(); draw();
+  setInterval(()=>{ const d=document.getElementById('live-dot'); d.style.opacity = d.style.opacity==='0'?'1':'0'; }, 900);
+})();
+</script>
+</body>
+</html>
