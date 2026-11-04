@@ -1,0 +1,75 @@
+# =============================================================================
+# Configurazione Bot Autotrade Gold XAU - DeFi con AI Integrata
+# Lingua: italiano | Modalita paper trading attiva di default (SICURA)
+# =============================================================================
+
+bot:
+  nome: "GoldAI XAU Bot"
+  versione: "1.0.0"
+  lingua: "it"
+  fuso_orario: "Europe/Rome"
+  modalita_paper_trading: true      # true = simulazione (consigliato), false = REALE (rischio)
+  operativita_h24: true
+  multi_trade: true
+  max_posizioni_concorrenti: 5
+
+ai:
+  attivo: true
+  tipo: "ibrido"                    # tecnico + ml
+  soglia_confidenza_minima: 0.65
+  intervallo_previsione_minuti: 15
+  modello_ml: "random_forest"       # random_forest | xgboost | lstm
+  usa_llm: false
+  llm_provider: "openai"            # openai | anthropic | locale
+  llm_api_key: "${LLM_API_KEY}"
+
+trading:
+  asset_principale: "XAU/USD"       # Oro vs Dollaro (prezzo riferimento)
+  asset_defi: "XAUT"                # Tether Gold (tokenizzato su blockchain)
+  rete_blockchain: "ethereum"       # ethereum | polygon | bsc
+  rpc_url: "${ETHEREUM_RPC_URL}"
+  indirizzo_wallet: "${WALLET_ADDRESS}"
+  chiave_privata: "${PRIVATE_KEY}"  # Usare SOLO se paper_trading=false
+  exchange_cex: "binance"           # solo per dati di prezzo (opzionale)
+  api_key_cex: "${CEX_API_KEY}"
+  api_secret_cex: "${CEX_API_SECRET}"
+
+risk_management:
+  capitale_totale_usd: 1000.0
+  rischio_per_operazione_percent: 1.0     # % del capitale per singolo trade
+  stop_loss_percent: 2.0
+  take_profit_percent: 4.0
+  trailing_stop_percent: 1.0
+  max_drawdown_giornaliero_percent: 5.0
+  max_perdite_consecutive: 3
+  dimensione_minima_ordine_usd: 10.0
+  slippage_tolleranza_percent: 0.5
+
+indicatori_tecnici:
+  rsi_periodo: 14
+  rsi_sovraacquisto: 70
+  rsi_sovravenduto: 30
+  macd_veloce: 12
+  macd_lento: 26
+  macd_segnale: 9
+  sma_breve: 20
+  sma_lungo: 50
+  bollinger_periodo: 20
+  bollinger_deviazioni: 2.0
+
+dati:
+  timeframe: "15m"
+  storico_candele: 500
+  prezzo_reale_api: "coingecko"       # coingecko | binance | mock
+  aggiornamento_prezzi_secondi: 60
+
+notifiche:
+  attive: false
+  telegram_bot_token: "${TELEGRAM_BOT_TOKEN}"
+  telegram_chat_id: "${TELEGRAM_CHAT_ID}"
+  email_smtp: false
+
+dashboard:
+  attiva: true
+  porta: 8080
+  host: "0.0.0.0"
