@@ -1,0 +1,27 @@
+# Ambiente virtuale
+venv/
+.env
+*.env
+
+# Logs e file generati
+logs/
+*.log
+impostazioni_utente.json
+models/*.pkl
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build / dist
+build/
+dist/
+*.egg-info/

@@ -74,3 +74,14 @@ dashboard:
   attiva: true
   porta: 8080
   host: "0.0.0.0"
+  autenticazione_attiva: true
+  username: "admin"
+  password_hash: "${DASHBOARD_PASSWORD_HASH}"  # genera con: python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('TUAPASSWORD'))"
+  session_secret: "${SESSION_SECRET}"
+
+sicurezza:
+  rate_limit_attivo: true
+  richieste_al_minuto: 60
+  blocca_modalita_reale_senza_env: true
+  never_save_private_key: true
+  allowed_origins: ["http://localhost:8080", "https://localhost:8080"]

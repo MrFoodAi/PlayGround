@@ -24,6 +24,9 @@ eventlet>=0.33.0
 # Notifiche (opzionale)
 python-telegram-bot>=20.0
 
+# Sicurezza dashboard
+werkzeug>=3.0.0
+
 # Utilita
 tzdata>=2023.3
 schedule>=1.2.0
