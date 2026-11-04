@@ -43,6 +43,21 @@ gold_ai_bot/
 
 ---
 
+## 🆕 Novità in questa versione
+
+- **USDC invece di USDT**: lo scambio su DeFi usa ora USDC come stablecoin di riferimento (modificabile in `config.yaml` sotto `trading.stablecoin`).
+- **Finestra Impostazioni** (`⚙️ Impostazioni` nella dashboard):
+  - Trade size fisso in USD (o calcolo automatico per rischio).
+  - Strategie preimpostate: **Conservativa**, **Bilanciata**, **Aggressiva**.
+  - Parametri di rischio: % per operazione, Stop Loss, Take Profit.
+  - Soglia di confidenza AI e massimo posizioni concorrenti.
+  - Modalità Paper Trading / Reale.
+- **Finestra Wallet** (`💼 Wallet` nella dashboard):
+  - Rete blockchain (Ethereum / Polygon / BSC).
+  - Indirizzo wallet, RPC URL.
+  - Saldo USDC e XAUT (simulato in paper trading).
+- Tutte le modifiche si applicano a caldo al motore in esecuzione e vengono salvate in `impostazioni_utente.json`.
+
 ## 🚀 Installazione e avvio rapido
 
 ### 1. Clona/entra nella cartella

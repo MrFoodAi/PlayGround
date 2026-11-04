@@ -25,7 +25,8 @@ ai:
 
 trading:
   asset_principale: "XAU/USD"       # Oro vs Dollaro (prezzo riferimento)
-  asset_defi: "XAUT"                # Tether Gold (tokenizzato su blockchain)
+  asset_defi: "XAUT"                # Token oro su blockchain (XAUT / PAXG)
+  stablecoin: "USDC"                # Stablecoin di scambio (USDC consigliato su DeFi)
   rete_blockchain: "ethereum"       # ethereum | polygon | bsc
   rpc_url: "${ETHEREUM_RPC_URL}"
   indirizzo_wallet: "${WALLET_ADDRESS}"

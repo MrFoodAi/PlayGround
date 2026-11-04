@@ -52,6 +52,8 @@ class TradingEngine:
         self.in_esecuzione = False
         self.loop_task: Optional[asyncio.Task] = None
         self.storico_segnali: list[Segnale] = []
+        self.max_posizioni_concorrenti = int(bot_cfg.get("max_posizioni_concorrenti", 5))
+        self.trade_size_forzato_usd: Optional[float] = None
 
     # ------------------------------------------------------------------ #
     # Ciclo vitale
@@ -123,10 +125,36 @@ class TradingEngine:
             self._valuta_apertura(segnale)
 
     # ------------------------------------------------------------------ #
+    # Applicazione impostazioni da interfaccia
+    # ------------------------------------------------------------------ #
+    def applica_impostazioni(self, imp: dict) -> None:
+        """Applica le impostazioni ricevute dalla dashboard (trade size, strategia, rischio, ecc.)."""
+        if "trade_size_usd" in imp and imp["trade_size_usd"]:
+            self.trade_size_forzato_usd = float(imp["trade_size_usd"])
+        else:
+            self.trade_size_forzato_usd = None
+
+        if "rischio_per_operazione_percent" in imp:
+            self.rischio.limiti.rischio_per_operazione_percent = float(imp["rischio_per_operazione_percent"])
+        if "stop_loss_percent" in imp:
+            self.rischio.limiti.stop_loss_percent = float(imp["stop_loss_percent"])
+        if "take_profit_percent" in imp:
+            self.rischio.limiti.take_profit_percent = float(imp["take_profit_percent"])
+        if "soglia_confidenza_minima" in imp:
+            self.ai.soglia = float(imp["soglia_confidenza_minima"])
+        if "max_posizioni_concorrenti" in imp:
+            self.max_posizioni_concorrenti = int(imp["max_posizioni_concorrenti"])
+        if "modalita_paper_trading" in imp:
+            self.paper_trading = bool(imp["modalita_paper_trading"])
+
+        logger.info("Impostazioni applicate dal pannello di controllo.")
+
+    # ------------------------------------------------------------------ #
     # Apertura / chiusura posizioni
     # ------------------------------------------------------------------ #
     def _valuta_apertura(self, segnale: Segnale) -> None:
-        if not self.multi_trade and len(self.portafoglio.posizioni_aperte) > 0:
+        if len(self.portafoglio.posizioni_aperte) >= self.max_posizioni_concorrenti:
+            logger.warning("Numero massimo di posizioni concorrenti raggiunto.")
             return
 
         puo, motivo_rischio = self.rischio.puo_operare()
@@ -138,8 +166,12 @@ class TradingEngine:
         direzione = "LONG" if segnale.azione == "BUY" else "SHORT"
         stop = self.rischio.prezzi_stop(prezzo, segnale.azione)
 
-        # Dimensione posizione in base al rischio
-        importo_usd = self.rischio.dimensione_posizione_usd(prezzo, stop["stop_loss"])
+        # Dimensione posizione: trade size forzato (impostazioni) oppure calcolo rischio
+        if self.trade_size_forzato_usd:
+            importo_usd = self.trade_size_forzato_usd
+        else:
+            importo_usd = self.rischio.dimensione_posizione_usd(prezzo, stop["stop_loss"])
+
         if importo_usd < self.rischio.limiti.dimensione_minima_ordine_usd:
             logger.warning(f"Importo calcolato {importo_usd:.2f} USD sotto il minimo.")
             return
