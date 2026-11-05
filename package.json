@@ -1,9 +1,0 @@
-{
-  "name": "gold-ai-xau-bot",
-  "version": "1.0.0",
-  "description": "GoldAI XAU Bot dashboard - static deployment output",
-  "private": true,
-  "scripts": {
-    "start": "node server.js"
-  }
-}
