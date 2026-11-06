@@ -11,7 +11,7 @@ export PORT
 
 SRC_DIR="$PROJECT_DIR/src"
 BUILD_DIR="$PROJECT_DIR/dist"
-OPENCODE_WEB_DIR="${OPENCODE_WEB_DIR:-}"
+OPENCODE_WEB_DIR="${OPENCODE_WEB_DIR:-/home/runner/work/_temp/omgithub-web}"
 
 echo "[start] PROJECT_DIR=$PROJECT_DIR"
 echo "[start] PORT=$PORT"
