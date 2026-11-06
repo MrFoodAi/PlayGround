@@ -1,112 +1,393 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GoldAI XAU Bot — Dashboard</title>
+<title>Gold Rush — XAU/USD Trader</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
   .max-w { max-width: 720px; margin: 0 auto; }
   header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-  .dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e; animation: blink 1.2s infinite; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 10px #fbbf24; animation: blink 1s infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  h1 { font-size: 20px; letter-spacing: -0.02em; }
+  h1 { font-size: 22px; letter-spacing: -0.02em; }
+  h1 .gold { color: #fbbf24; }
   .tag { font-size: 12px; color: #94a3b8; margin-left: 8px; }
-  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
-  @media (max-width: 600px){ .grid{ grid-template-columns: 1fr; } body{ padding: 12px; } }
-  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; }
-  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 10px; }
+  p.lead { font-size: 14px; color: #94a3b8; margin-top: 8px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 600px){ .grid{ grid-template-columns: repeat(2, 1fr); } body{ padding: 12px; } .stat{ padding: 10px 12px; } }
+  .stat { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px 14px; text-align: center; }
+  .stat .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 4px; }
+  .stat .val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .val.pos { color: #34d399; } .stat .val.neg { color: #f87171; } .stat .val.neu { color: #fbbf24; }
+  .stat .val.warn { color: #fb923c; }
+  .timer { color: #f87171; font-weight: 800; }
+  canvas { width: 100%; height: 210px; background: #0b1120; border-radius: 8px; border: 1px solid #334155; margin-top: 8px; display: block; }
   .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #334155; }
   .row:last-child { border-bottom: none; }
-  .v { font-weight: 700; font-size: 15px; }
-  .buy { color: #34d399; } .sell { color: #f87171; } .hold { color: #fbbf24; }
-  canvas { width: 100%; height: 220px; background: #0b1120; border-radius: 8px; border: 1px solid #334155; margin-top: 10px; display: block; }
-  .cta { margin-top: 16px; display: flex; gap: 8px; }
-  button { flex:1; padding: 10px 14px; border-radius: 8px; border: none; background: #2563eb; color: #fff; font-weight: 700; cursor: pointer; font-size: 14px; }
-  button:hover { background: #1d4ed8; }
-  button.secondary { background: #334155; }
-  button.secondary:hover { background: #475569; }
   .muted { font-size: 12px; color: #64748b; margin-top: 8px; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
   .badge.paper { background: #166534; color: #fff; }
+  .badge.buy { background: #14532d; color: #86efac; border: 1px solid #34d399; }
+  .badge.sell { background: #450a0a; color: #fca5a5; border: 1px solid #f87171; }
+  .badge.hold { background: #451a03; color: #fcd34d; border: 1px solid #fbbf24; }
+  .cta { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+  button { flex: 1 1 140px; padding: 12px 16px; border-radius: 10px; border: none; background: #2563eb; color: #fff; font-weight: 800; cursor: pointer; font-size: 15px; min-width: 130px; }
+  button:hover { background: #1d4ed8; }
+  button:active { transform: translateY(1px); }
+  button.secondary { background: #334155; }
+  button.secondary:hover { background: #475569; }
+  button.gold { background: #b45309; }
+  button.gold:hover { background: #92400e; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; background: #334155; }
+  button.primary-big { padding: 16px; font-size: 17px; min-width: 220px; }
+  .signal { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+  .signal .lbl { font-size: 12px; color: #94a3b8; }
+  .controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .log { font-size: 12px; color: #94a3b8; min-height: 20px; margin-top: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .log .t { color: #64748b; }
+  .overlay-title { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+  .overlay-title .gold { color: #fbbf24; }
+  .big { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 6px 0; }
+  .big.pos { color: #34d399; } .big.neg { color: #f87171; } .big.neu { color: #fbbf24; }
+  .center { text-align: center; }
+  ul.rules { text-align: left; color: #94a3b8; font-size: 13px; line-height: 1.7; margin: 10px 0 0 18px; }
+  .sep { height: 1px; background: #334155; margin: 14px 0; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(120px); background: #1e293b; border: 1px solid #334155; color: #fff; padding: 8px 16px; border-radius: 10px; font-size: 13px; transition: transform 0.25s; z-index: 20; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .hint { font-size: 12px; color: #64748b; margin-top: 4px; }
 </style>
 </head>
 <body>
 <div class="max-w">
-  <header>
-    <div class="dot" id="live-dot"></div>
-    <h1>GoldAI XAU Bot <span class="tag">· Paper Trading H24</span></h1>
-  </header>
 
-  <div class="grid">
-    <div class="card">
-      <h2>Mercato XAU/USD</h2>
-      <div class="row"><span>Prezzo attuale</span><span class="v" id="price">-- USD</span></div>
-      <div class="row"><span>Segnale AI</span><span class="v hold" id="signal">HOLD</span></div>
-      <div class="row"><span>Confidenza</span><span class="v" id="conf">-- %</span></div>
+  <!-- START SCREEN -->
+  <div class="screen active" id="screen-start">
+    <header>
+      <div class="dot" id="live-dot"></div>
+      <h1>Gold Rush <span class="gold">·</span> XAU/USD Trader</h1>
+    </header>
+    <div class="card center">
+      <p class="lead">A session lasts <b>3 minutes</b>. Buy gold low, sell high, finish with the most cash.</p>
+      <div class="sep"></div>
+      <div style="margin: 10px 0;">
+        <div class="lbl" style="text-align:center; margin-bottom:6px;">Best equity (high score)</div>
+        <div class="big neu" id="hi-score">$0</div>
+      </div>
+      <ul class="rules">
+        <li><b>BUY</b> — open a long position with all available cash at the current price.</li>
+        <li><b>SELL</b> — close your position and realize the profit/loss.</li>
+        <li>You can hold only one position at a time. Unrealized PnL updates live on the chart.</li>
+        <li>When time runs out your position is auto-sold. Highest final equity wins.</li>
+      </ul>
+      <div class="cta" style="justify-content: center; margin-top: 14px;">
+        <button class="primary-big gold" id="btn-start">Start Session</button>
+      </div>
+      <div class="muted" style="margin-top: 10px;">Simulated market · No real money · Paper trading</div>
     </div>
-    <div class="card">
-      <h2>Portafoglio</h2>
-      <div class="row"><span>Disponibile</span><span class="v" id="cash">-- USD</span></div>
-      <div class="row"><span>PnL totale</span><span class="v" id="pnl">-- USD</span></div>
-      <div class="row"><span>Posizioni aperte</span><span class="v" id="positions">--</span></div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="screen-game">
+    <header>
+      <div class="dot" id="live-dot"></div>
+      <h1>Gold Rush <span class="gold">·</span> Session Live</h1>
+    </header>
+
+    <div class="grid">
+      <div class="stat"><div class="lbl">Cash</div><div class="val neu" id="stat-cash">$10,000.00</div></div>
+      <div class="stat"><div class="lbl">Equity</div><div class="val neu" id="stat-equity">$10,000.00</div></div>
+      <div class="stat"><div class="lbl">Unrealized PnL</div><div class="val neu" id="stat-pnl">$0.00</div></div>
+      <div class="stat"><div class="lbl">Time Left</div><div class="val timer" id="stat-time">3:00</div></div>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:end; margin-bottom:8px;">
+      <div style="flex:1;">
+        <div class="signal">
+          <span class="lbl">AI signal</span>
+          <span class="badge hold" id="badge-signal">HOLD</span>
+          <span class="lbl" style="margin-left:auto; font-size:11px;">Price: <span id="lbl-price">--</span></span>
+        </div>
+        <canvas id="chart"></canvas>
+      </div>
+      <div style="width:260px; display:flex; flex-direction:column; gap:8px;">
+        <div class="card" style="padding:12px;">
+          <div class="lbl" style="margin-bottom:6px;">Position</div>
+          <div class="row"><span>Ounces</span><span class="val neu" id="pos-oz">0.000 oz</span></div>
+          <div class="row"><span>Entry price</span><span class="val neu" id="pos-entry">--</span></div>
+          <div class="row"><span>Current value</span><span class="val neu" id="pos-value">$0.00</span></div>
+        </div>
+        <div class="controls">
+          <button id="btn-buy">BUY</button>
+          <button class="secondary" id="btn-sell">SELL</button>
+        </div>
+        <div class="log" id="log">Session starting…</div>
+      </div>
+    </div>
+
+    <div class="cta" style="justify-content:center;">
+      <button class="secondary" id="btn-back">Exit to Menu</button>
+    </div>
+    <div class="muted" style="margin-top: 8px;">Price updates every tick · Auto-sell when time expires</div>
+  </div>
+
+  <!-- GAME OVER SCREEN -->
+  <div class="screen" id="screen-over">
+    <header>
+      <div class="dot" id="live-dot"></div>
+      <h1>Gold Rush <span class="gold">·</span> Session Over</h1>
+    </header>
+    <div class="card center">
+      <div class="overlay-title">Final Equity <span class="gold">·</span> <span id="lbl-result"></span></div>
+      <div class="big neu" id="final-equity">$0.00</div>
+      <div class="row" style="border:none; justify-content:center; margin: 10px 0;">
+        <span>Starting cash</span><span class="val neu">$10,000.00</span>
+      </div>
+      <div class="row" style="border:none; justify-content:center; margin-bottom: 4px;">
+        <span>Profit / Loss</span><span class="val neu" id="final-pnl">$0.00</span>
+      </div>
+      <div class="muted" id="final-note" style="margin-top: 6px;"></div>
+      <div class="sep"></div>
+      <div style="margin: 8px 0;">
+        <div class="lbl">High Score</div>
+        <div class="big neu" id="over-hi-score">$0</div>
+        <div class="muted" id="over-record" style="margin-top:4px;"></div>
+      </div>
+      <div class="cta" style="justify-content: center; margin-top: 14px;">
+        <button class="primary-big gold" id="btn-restart">Play Again</button>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Grafico prezzo (simulato)</h2>
-    <canvas id="chart"></canvas>
-    <div class="muted">Aggiornamento ogni 3s &middot; AI autonoma &middot; RSI &middot; MACD &middot; Bollinger</div>
-  </div>
+  <div class="toast" id="toast"></div>
 
-  <div class="cta">
-    <button id="btn-start">Avvia simulazione</button>
-    <button class="secondary" id="btn-stop">Ferma</button>
-  </div>
-  <div class="muted" id="log">In attesa...</div>
 </div>
 <script>
 (function(){
-  const priceEl=document.getElementById('price'), signalEl=document.getElementById('signal'), confEl=document.getElementById('conf');
-  const pnlEl=document.getElementById('pnl'), posEl=document.getElementById('positions');
-  const logEl=document.getElementById('log');
-  let price=2024.50, pnl=0;
-  const history=Array(60).fill(price);
-  const canvas=document.getElementById('chart'); const ctx=canvas.getContext('2d');
-  function resize(){ canvas.width=canvas.offsetWidth*window.devicePixelRatio; canvas.height=canvas.offsetHeight*window.devicePixelRatio; ctx.scale(window.devicePixelRatio,window.devicePixelRatio); }
-  window.addEventListener('resize',resize); resize();
-  function randWalk(){ price += (Math.random()-0.49)*2.6; if(price<1850) price=1850; if(price>2350) price=2350; history.push(price); history.shift(); }
-  function signal(){ const r=Math.random(); return r>0.6?{a:'BUY',c:'buy'}:r<0.25?{a:'SELL',c:'sell'}:{a:'HOLD',c:'hold'}; }
-  function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    const w=canvas.width,h=canvas.height; const pad=30;
-    const min=Math.min(...history), max=Math.max(...history), range=max-min||1;
-    ctx.beginPath(); ctx.strokeStyle='#38bdf8'; ctx.lineWidth=2;
-    for(let i=0;i<history.length;i++){
-      const x=pad+(i/(history.length-1))*(w-2*pad);
-      const y=h-pad-(history[i]-min)/range*(h-2*pad);
-      if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  const START_CASH = 10000;
+  const SESSION_SEC = 180;
+  const TICK_MS = 500;
+
+  // DOM refs
+  const screens = { start: document.getElementById('screen-start'), game: document.getElementById('screen-game'), over: document.getElementById('screen-over') };
+  const els = {
+    cash: document.getElementById('stat-cash'), equity: document.getElementById('stat-equity'),
+    pnl: document.getElementById('stat-pnl'), time: document.getElementById('stat-time'),
+    badge: document.getElementById('badge-signal'), lblPrice: document.getElementById('lbl-price'),
+    posOz: document.getElementById('pos-oz'), posEntry: document.getElementById('pos-entry'), posValue: document.getElementById('pos-value'),
+    log: document.getElementById('log'), btnBuy: document.getElementById('btn-buy'), btnSell: document.getElementById('btn-sell'),
+    btnStart: document.getElementById('btn-start'), btnBack: document.getElementById('btn-back'),
+    btnRestart: document.getElementById('btn-restart'),
+    finalEquity: document.getElementById('final-equity'), finalPnl: document.getElementById('final-pnl'),
+    lblResult: document.getElementById('lbl-result'), finalNote: document.getElementById('final-note'),
+    overHi: document.getElementById('over-hi-score'), overRecord: document.getElementById('over-record'),
+    hiScore: document.getElementById('hi-score'),
+    canvas: document.getElementById('chart'), toast: document.getElementById('toast'),
+  };
+  const ctx = els.canvas.getContext('2d');
+
+  // Game state
+  let state = {
+    cash: START_CASH, oz: 0, entryPrice: 0, price: 2050, history: Array(200).fill(2050),
+    timeLeft: SESSION_SEC, running: false, gameOver: false, tickId: null, timerId: null,
+    lastSignal: 'HOLD', logMsgs: [],
+  };
+
+  function money(v){ return v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function ozStr(v){ return v.toFixed(3); }
+
+  function showScreen(name){
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+    resize();
+  }
+
+  function toast(msg, ms=2200){
+    const t = els.toast; t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms);
+  }
+
+  function log(msg){
+    const line = document.createElement('div');
+    line.innerHTML = `<span class="t">${new Date().toLocaleTimeString('en-US',{hour12:false})}</span> ${msg}`;
+    els.log.prepend(line);
+    while (els.log.children.length > 6) els.log.removeChild(els.log.lastChild);
+  }
+
+  function priceStep(){
+    const s = state.price;
+    // random walk + gentle mean reversion toward 2050
+    let p = s + (Math.random() - 0.5) * 3.2 + (2050 - s) * 0.003;
+    if (p < 1850) p = 1850; if (p > 2350) p = 2350;
+    state.price = p;
+    state.history.push(p); state.history.shift();
+  }
+
+  function aiSignal(){
+    const r = Math.random();
+    return r > 0.62 ? 'BUY' : r < 0.22 ? 'SELL' : 'HOLD';
+  }
+
+  function equity(){ return state.cash + state.oz * state.price; }
+  function unrealized(){ return state.oz * (state.price - state.entryPrice); }
+
+  function canBuy(){ return state.running && state.oz === 0 && state.cash > 50; }
+  function canSell(){ return state.running && state.oz > 0; }
+
+  function refreshUI(){
+    const eq = equity();
+    const pnl = state.oz > 0 ? unrealized() : 0;
+    els.cash.textContent = '$' + money(state.cash);
+    els.equity.textContent = '$' + money(eq);
+    els.equity.className = 'val ' + (eq >= START_CASH ? 'pos' : 'neg');
+    els.pnl.textContent = (pnl >= 0 ? '+' : '') + '$' + money(Math.abs(pnl));
+    els.pnl.className = 'val ' + (pnl >= 0 ? 'pos' : (pnl < 0 ? 'neg' : 'neu'));
+    const m = Math.floor(state.timeLeft / 60), s = Math.floor(state.timeLeft % 60);
+    els.time.textContent = m.toString().padStart(2,'0') + ':' + s.toString().padStart(2,'0');
+    els.time.className = 'val timer' + (state.timeLeft <= 30 ? ' warn' : '');
+    els.lblPrice.textContent = state.price.toFixed(2);
+    els.posOz.textContent = state.oz > 0 ? ozStr(state.oz) + ' oz' : '—';
+    els.posEntry.textContent = state.oz > 0 ? '$' + money(state.entryPrice) : '—';
+    els.posValue.textContent = state.oz > 0 ? '$' + money(state.oz * state.price) : '$0.00';
+    els.btnBuy.disabled = !canBuy(); els.btnSell.disabled = !canSell();
+    els.btnBuy.textContent = canBuy() ? 'BUY (all cash)' : 'BUY';
+    els.btnSell.textContent = canSell() ? 'SELL (realize PnL)' : 'SELL';
+
+    const sig = aiSignal();
+    if (sig !== state.lastSignal) { state.lastSignal = sig; }
+    els.badge.textContent = sig;
+    els.badge.className = 'badge ' + (sig === 'BUY' ? 'buy' : sig === 'SELL' ? 'sell' : 'hold');
+  }
+
+  function resize(){
+    const dpr = window.devicePixelRatio || 1;
+    const w = els.canvas.offsetWidth || 700;
+    const h = els.canvas.offsetHeight || 210;
+    els.canvas.width = w * dpr; els.canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawChart();
+  }
+  window.addEventListener('resize', resize);
+
+  function drawChart(){
+    const w = els.canvas.offsetWidth || 700;
+    const h = els.canvas.offsetHeight || 210;
+    const pad = 30, bottomPad = 24;
+    const hi = Math.max(...state.history), lo = Math.min(...state.history);
+    const range = hi - lo || 1;
+    ctx.clearRect(0, 0, w, h);
+    // grid lines
+    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
+    for (let g = 0; g <= 4; g++) {
+      const y = h - bottomPad - (g / 4) * (h - bottomPad - pad);
+      ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(w - pad, y); ctx.stroke();
+    }
+    // price line
+    ctx.beginPath(); ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2;
+    for (let i = 0; i < state.history.length; i++) {
+      const x = pad + (i / (state.history.length - 1)) * (w - 2 * pad);
+      const y = h - bottomPad - (state.history[i] - lo) / range * (h - bottomPad - pad);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
-    ctx.fillStyle='#94a3b8'; ctx.font='11px system-ui'; ctx.fillText(price.toFixed(2)+' USD', pad+6, pad-6);
+    // current price dot + label
+    const cx = w - pad, cy = h - bottomPad - (state.price - lo) / range * (h - bottomPad - pad);
+    ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fillStyle = '#fbbf24'; ctx.fill();
+    ctx.fillStyle = '#94a3b8'; ctx.font = '11px system-ui'; ctx.textAlign = 'right';
+    ctx.fillText(state.price.toFixed(2), w - pad - 8, cy - 8);
+    // entry price dashed line
+    if (state.oz > 0) {
+      const ey = h - bottomPad - (state.entryPrice - lo) / range * (h - bottomPad - pad);
+      ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#34d399'; ctx.lineWidth = 1.5;
+      ctx.moveTo(pad, ey); ctx.lineTo(w - pad, ey); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#34d399'; ctx.textAlign = 'left'; ctx.fillText('entry', pad + 6, ey - 6);
+    }
+    ctx.fillStyle = '#64748b'; ctx.textAlign = 'left'; ctx.fillText('low  ' + lo.toFixed(0), pad + 6, h - bottomPad - 6);
+    ctx.textAlign = 'right'; ctx.fillText('high  ' + hi.toFixed(0), w - pad - 6, h - bottomPad - 6);
   }
-  function tick(){
-    randWalk();
-    const s=signal();
-    priceEl.textContent=price.toFixed(2)+' USD';
-    signalEl.textContent=s.a; signalEl.className='v '+s.c;
-    confEl.textContent=(Math.floor(55+Math.random()*40))+' %';
-    pnl += (Math.random()-0.48)*12;
-    pnlEl.textContent=pnl.toFixed(2)+' USD';
-    posEl.textContent=Math.floor(Math.random()*4);
-    logEl.textContent='Ultimo aggiornamento: '+new Date().toLocaleTimeString('it-IT');
-    draw();
+
+  function doBuy(){
+    if (!canBuy()) return;
+    state.oz = state.cash / state.price;
+    state.entryPrice = state.price;
+    state.cash = 0;
+    log(`Opened long ${ozStr(state.oz)} oz @ $${state.price.toFixed(2)}`);
+    toast('Position opened');
+    refreshUI(); drawChart();
   }
-  document.getElementById('btn-start').onclick=()=>{ document.getElementById('btn-start').textContent='Simulazione attiva'; if(!window.__t) window.__t=setInterval(tick,1200); };
-  document.getElementById('btn-stop').onclick=()=>{ clearInterval(window.__t); window.__t=null; document.getElementById('btn-start').textContent='Avvia simulazione'; };
-  tick(); draw();
-  setInterval(()=>{ const d=document.getElementById('live-dot'); d.style.opacity = d.style.opacity==='0'?'1':'0'; }, 900);
+
+  function doSell(){
+    if (!canSell()) return;
+    const proceeds = state.oz * state.price;
+    const realized = proceeds - state.oz * state.entryPrice;
+    state.cash = proceeds;
+    log(`Closed position ${ozStr(state.oz)} oz @ $${state.price.toFixed(2)} → ${realized >= 0 ? '+' : ''}$${money(Math.abs(realized))}`);
+    toast(realized >= 0 ? 'Position closed at a profit' : 'Position closed at a loss');
+    state.oz = 0; state.entryPrice = 0;
+    refreshUI(); drawChart();
+  }
+
+  function endGame(){
+    if (!state.running) return;
+    state.running = false; state.gameOver = true;
+    clearInterval(state.tickId); state.tickId = null;
+    clearInterval(state.timerId); state.timerId = null;
+    if (state.oz > 0){
+      state.cash = state.oz * state.price;
+      log(`Time up — auto-sold ${ozStr(state.oz)} oz @ $${state.price.toFixed(2)}`);
+      state.oz = 0; state.entryPrice = 0;
+    }
+    const eq = state.cash;
+    const pnl = eq - START_CASH;
+    const hi = Number(localStorage.getItem('goldrush_hi') || 0);
+    const isRecord = eq > hi;
+    if (isRecord) localStorage.setItem('goldrush_hi', eq);
+    els.finalEquity.textContent = '$' + money(eq);
+    els.finalEquity.className = 'big ' + (eq >= START_CASH ? 'pos' : 'neg');
+    els.finalPnl.textContent = (pnl >= 0 ? '+' : '') + '$' + money(Math.abs(pnl));
+    els.finalPnl.className = 'big ' + (pnl >= 0 ? 'pos' : 'neg');
+    els.lblResult.textContent = pnl >= 0 ? 'Profit' : 'Loss';
+    els.finalNote.textContent = isRecord ? '🏆 New high score!' : (eq >= START_CASH ? 'Session closed in profit.' : 'Better luck next time.');
+    els.overHi.textContent = '$' + money(Math.max(hi, eq));
+    els.overRecord.textContent = isRecord ? 'New record!' : ('Best: $' + money(hi));
+    showScreen('over');
+  }
+
+  function startGame(){
+    state = { cash: START_CASH, oz: 0, entryPrice: 0, price: 2050, history: Array(200).fill(2050), timeLeft: SESSION_SEC, running: true, gameOver: false, tickId: null, timerId: null, lastSignal: 'HOLD', logMsgs: [] };
+    els.log.innerHTML = '';
+    log('Session started — $10,000 cash');
+    showScreen('game');
+    resize();
+    state.tickId = setInterval(() => {
+      priceStep(); refreshUI(); drawChart();
+    }, TICK_MS);
+    state.timerId = setInterval(() => {
+      state.timeLeft--;
+      if (state.timeLeft <= 0) endGame();
+      else refreshUI();
+    }, 1000);
+    refreshUI(); drawChart();
+  }
+
+  // bindings
+  els.btnStart.onclick = () => { startGame(); };
+  els.btnBack.onclick = () => { if (confirm('Exit the session? Progress will be lost.')) showScreen('start'); };
+  els.btnRestart.onclick = () => { startGame(); };
+  els.btnBuy.onclick = doBuy;
+  els.btnSell.onclick = doSell;
+
+  // init
+  const savedHi = Number(localStorage.getItem('goldrush_hi') || 0);
+  els.hiScore.textContent = '$' + money(savedHi);
+  els.overHi.textContent = '$' + money(savedHi);
+  resize();
+  drawChart();
+  setInterval(() => { const d = document.getElementById('live-dot'); if (d) d.style.opacity = d.style.opacity === '0' ? '1' : '0'; }, 900);
 })();
 </script>
 </body>
