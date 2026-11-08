@@ -17,8 +17,12 @@
 - 🌍 [Create with OMGithub](https://go.ondev.store/).
 <!-- omgithub:readme:end -->
 
-## MINER // Protocollo Aurora
+## MINER // Monitor Bitcoin
 
-Un idle game in italiano in cui gestisci una flotta di bot e scansioni sei reti immaginarie. Accumula Aurora, potenzia la stazione, completa obiettivi e instrada una parte dei crediti verso l'archivio demo virtuale. I progressi vengono salvati localmente nel browser; la produzione offline è limitata a 8 ore.
+Monitor in sola lettura dei dati pubblici reali della rete Bitcoin, forniti dall'API di [mempool.space](https://mempool.space/). Il server aggiorna automaticamente le metriche e la pagina le ricarica ogni minuto. Se la fonte non è raggiungibile o un dato non è disponibile, l'interfaccia lo segnala senza sostituirlo con valori inventati.
 
-**È solo una simulazione di gioco:** non esegue mining, non si collega a reti blockchain e non richiede né trasferisce criptovalute o fondi reali.
+Mostra altezza e dettagli dell'ultimo blocco, transazioni del blocco e del mempool, fee del mempool e tariffe consigliate. È limitato a Bitcoin (BTC): non confronta altcoin, non esegue mining, non usa CPU/GPU, non si collega a pool o wallet e non stima profitti.
+
+Avvio locale: `python3 server.py` e poi apri `http://127.0.0.1:3002`. Il monitor richiede una connessione internet verso mempool.space.
+
+**Monitor informativo, non miner:** non esegue mining, non si collega a pool o wallet e non invia transazioni né richiede o trasferisce criptovalute o fondi reali.
