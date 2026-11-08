@@ -19,6 +19,6 @@
 
 ## MINER // Protocollo Aurora
 
-Un idle game in italiano in cui gestisci una flotta di bot e scansioni sei reti immaginarie. Accumula ricompense virtuali, metti in pausa i bot e attiva/disattiva l'instradamento verso il wallet demo. I progressi vengono salvati localmente nel browser.
+Un idle game in italiano in cui gestisci una flotta di bot e scansioni sei reti immaginarie. Accumula Aurora, potenzia la stazione, completa obiettivi e instrada una parte dei crediti verso l'archivio demo virtuale. I progressi vengono salvati localmente nel browser; la produzione offline è limitata a 8 ore.
 
 **È solo una simulazione di gioco:** non esegue mining, non si collega a reti blockchain e non richiede né trasferisce criptovalute o fondi reali.

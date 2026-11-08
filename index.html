@@ -2,44 +2,79 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090b12">
-  <meta name="description" content="Monitor Bitcoin con dati pubblici reali e analisi AI locale opzionale.">
-  <title>MINER // Monitor Bitcoin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090d12">
+  <meta name="description" content="Protocollo Aurora: un idle game di esplorazione e gestione di reti immaginarie.">
+  <title>MINER // Protocollo Aurora</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="app-shell">
     <header class="topbar">
-      <a class="brand" href="/" aria-label="Miner monitor home"><span class="brand-mark"><i></i><i></i><i></i></span><span>mine<span class="brand-light">/os</span><small>MONITOR BITCOIN</small></span></a>
-      <div class="topbar-right"><span id="connection" class="connection"><i></i> CONNESSIONE IN CORSO</span><button id="refreshBtn" class="refresh-button" type="button">↻ <span>Aggiorna</span></button></div>
+      <a class="brand" href="#top" aria-label="Miner OS home"><span class="brand-mark"><i></i><i></i><i></i></span><span>mine<span class="brand-light">/os</span><small>PROTOCOLLO AURORA</small></span></a>
+      <div class="topbar-right"><span class="sim-tag"><i></i> SIMULAZIONE</span><button id="soundBtn" class="icon-button" type="button" aria-label="Attiva o disattiva suoni">♫ <span>Audio off</span></button><button id="resetBtn" class="quiet-button" type="button">Nuova partita</button></div>
     </header>
-    <section class="intro">
-      <div><div class="eyebrow"><span class="eyebrow-line"></span> DATI DI RETE IN TEMPO REALE</div><h1>La rete Bitcoin<span class="period">.</span></h1><p class="heading-sub">Metriche pubbliche della blockchain, senza stime di guadagno o saldi inventati.</p></div>
-      <div class="updated">ULTIMO AGGIORNAMENTO <b id="updatedAt">—</b></div>
+
+    <section class="intro" id="top">
+      <div><div class="eyebrow"><span class="eyebrow-line"></span> STAZIONE DI ESPLORAZIONE · SETTORE 07</div><h1>Costruisci la tua <span>flotta.</span></h1><p class="heading-sub">Invia bot nelle reti sconosciute, raccogli Aurora e porta la tua stazione online.</p></div>
+      <div class="rank-box"><span>GRADO OPERATIVO</span><b id="rank">01 <i>·</i> Recluta</b><div class="rank-track"><i id="rankProgress"></i></div><small id="rankHint">0 / 100 XP al prossimo grado</small></div>
     </section>
-    <div id="errorBanner" class="error-banner" role="status" hidden></div>
-    <section class="stats-grid" aria-label="Metriche reali Bitcoin">
-      <article class="stat-card"><div class="stat-top"><span>Altezza blocco</span><span class="stat-icon">▤</span></div><div class="stat-value"><span id="height">—</span></div><div class="stat-foot">Ultimo blocco pubblicato</div></article>
-      <article class="stat-card"><div class="stat-top"><span>Transazioni nel blocco</span><span class="stat-icon">⇄</span></div><div class="stat-value"><span id="txCount">—</span></div><div class="stat-foot">Blocco più recente</div></article>
-      <article class="stat-card"><div class="stat-top"><span>Transazioni in attesa</span><span class="stat-icon">◷</span></div><div class="stat-value"><span id="mempoolCount">—</span></div><div class="stat-foot">Mempool pubblico</div></article>
-      <article class="stat-card"><div class="stat-top"><span>Commissione consigliata</span><span class="stat-icon">₿</span></div><div class="stat-value"><span id="feeRate">—</span><small>sat/vB</small></div><div class="stat-foot">Priorità alta · API pubblica</div></article>
+
+    <section class="resource-strip" aria-label="Risorse">
+      <article class="resource-card primary"><div class="resource-label"><span class="resource-icon">✦</span> AURORA DISPONIBILE</div><div class="resource-number" id="credits">0</div><div class="resource-foot"><span class="live-dot"></span><b id="rate">+0.0</b> / sec <span class="foot-divider">·</span> totale <span id="lifetime">0</span></div></article>
+      <article class="resource-card"><div class="resource-label"><span class="resource-icon">⌘</span> BOT ATTIVI</div><div class="resource-number"><span id="bots">1</span><small> / <span id="botCap">8</span></small></div><div class="resource-foot"><span id="networkCount">1</span> reti in scansione</div></article>
+      <article class="resource-card"><div class="resource-label"><span class="resource-icon">◈</span> ARCHIVIO DEMO</div><div class="resource-number" id="vault">0</div><div class="resource-foot"><span id="routeStatus">Instradamento disattivato</span></div></article>
+      <article class="resource-card"><div class="resource-label"><span class="resource-icon">◷</span> TEMPO DI ATTIVITÀ</div><div class="resource-number" id="uptime">00:00</div><div class="resource-foot" id="lastSave">Salvataggio locale attivo</div></article>
     </section>
+
     <section class="main-grid">
-      <article class="panel block-panel"><div class="panel-header"><div><div class="section-kicker">ULTIMO BLOCCO</div><h2>Stato della blockchain</h2></div><span class="live-badge"><i></i> DATI LIVE</span></div>
-        <dl class="details"><div><dt>Hash</dt><dd id="blockHash">—</dd></div><div><dt>Orario blocco</dt><dd id="blockTime">—</dd></div><div><dt>Dimensione</dt><dd id="blockSize">—</dd></div><div><dt>Fee totali nel mempool</dt><dd id="mempoolFees">—</dd></div><div><dt>Tariffe (sat/vB)</dt><dd id="feeSummary">—</dd></div></dl>
-      </article>
-      <article class="panel ai-panel"><div class="panel-header"><div><div class="section-kicker">ASSISTENTE LOCALE</div><h2>Analisi AI</h2></div><span id="aiBadge" class="ai-badge">IN ATTESA</span></div>
-        <p id="aiMessage" class="ai-message">L’assistente analizzerà i dati reali quando un modello Ollama locale è disponibile sul server.</p>
-        <div class="ai-meta"><span>Modello: <b id="aiModel">non configurato</b></span><span id="aiUpdated">Nessuna analisi</span></div>
-        <p class="ai-disclaimer">L’AI descrive solo metriche on-chain: non esegue mining, non invia transazioni e non fornisce previsioni di profitto.</p>
-      </article>
+      <div class="left-column">
+        <article class="panel fleet-panel">
+          <div class="panel-header"><div><div class="section-kicker">CONTROLLO CENTRALE</div><h2>Flotta di esplorazione</h2></div><button id="pauseBtn" class="pause-button" type="button"><span>Ⅱ</span> Metti in pausa</button></div>
+          <div class="fleet-visual"><div class="radar"><div class="radar-ring ring-one"></div><div class="radar-ring ring-two"></div><div class="radar-ring ring-three"></div><div class="radar-sweep"></div><span class="radar-core">✦</span><i class="ping ping-a"></i><i class="ping ping-b"></i><i class="ping ping-c"></i></div><div class="fleet-copy"><span class="status-pill" id="fleetStatus"><i></i> FLOTTA OPERATIVA</span><h3 id="fleetTitle">La tua squadra è pronta.</h3><p id="fleetMessage">I bot scandagliano le reti selezionate in cerca di frammenti Aurora.</p><div class="mini-stats"><span>EFFICIENZA <b id="efficiency">100%</b></span><span>PROSSIMO BONUS <b id="nextBonus">—</b></span></div></div></div>
+          <div class="panel-subhead"><div><div class="section-kicker">RETI CONOSCIUTE</div><span class="subhead-note">Sblocca una rete per espandere la ricerca</span></div><span id="networkTotal" class="network-total">01 / 06</span></div>
+          <div id="networkGrid" class="network-grid"></div>
+        </article>
+
+        <article class="panel upgrades-panel">
+          <div class="panel-header"><div><div class="section-kicker">LABORATORIO</div><h2>Ricerca e sviluppo</h2></div><span class="lab-tag">POTENZIAMENTI</span></div>
+          <div id="upgradeList" class="upgrade-list"></div>
+        </article>
+      </div>
+
+      <aside class="right-column">
+        <article class="panel ops-panel">
+          <div class="panel-header"><div><div class="section-kicker">OPERAZIONI</div><h2>Azioni rapide</h2></div><span class="keycap">SPACE</span></div>
+          <button id="scanBtn" class="scan-button" type="button"><span class="scan-icon">⌕</span><span><b>Scansione manuale</b><small id="scanHint">Invia un impulso alla rete · pronto</small></span><span class="scan-arrow">↗</span></button>
+          <div class="ops-divider"></div>
+          <div class="buy-row"><div><b>Espandi la flotta</b><small>Un bot aggiunge capacità di scansione</small></div><button id="buyBotBtn" class="buy-button" type="button"><span>＋ BOT</span><b id="botCost">50 ✦</b></button></div>
+          <div class="ops-note"><span>ⓘ</span> Ogni bot migliora la produzione. La capacità aumenta con il grado.</div>
+        </article>
+
+        <article class="panel routing-panel">
+          <div class="panel-header"><div><div class="section-kicker">ARCHIVIO LOCALE</div><h2>Instradamento demo</h2></div><span class="vault-icon">◈</span></div>
+          <p>Accumula qui una parte dei crediti generati. È un archivio virtuale solo per questa partita.</p>
+          <div class="route-address"><span>DESTINAZIONE DIMOSTRATIVA</span><code>aurora://stazione-07</code><span class="copy-mark">⌁</span></div>
+          <div class="route-control"><div><b id="routeLabel">Instradamento disattivato</b><small id="routeSub">I crediti restano disponibili</small></div><button id="routeToggle" class="toggle" type="button" role="switch" aria-checked="false" aria-label="Attiva instradamento demo"><i></i></button></div>
+          <div class="route-meter"><div><span>RISERVA ARCHIVIO</span><b id="vaultPercent">0%</b></div><div class="meter-track"><i id="vaultMeter"></i></div></div>
+        </article>
+
+        <article class="panel mission-panel">
+          <div class="panel-header"><div><div class="section-kicker">OBIETTIVO ATTUALE</div><h2 id="missionTitle">Primo contatto</h2></div><span class="mission-star">✧</span></div>
+          <p id="missionText">Raccogli 100 Aurora per calibrare la stazione.</p>
+          <div class="mission-progress"><div><span>PROGRESSO</span><b id="missionCount">0 / 100</b></div><div class="meter-track"><i id="missionMeter"></i></div></div>
+          <div id="toast" class="toast" role="status" aria-live="polite"></div>
+        </article>
+        <div class="disclaimer"><span>◉</span><p><b>Gioco di simulazione.</b> Nessun mining reale, blockchain, wallet o trasferimento di fondi. I crediti sono punti virtuali salvati solo in questo browser.</p></div>
+      </aside>
     </section>
-    <footer class="page-footer"><span>FONTE: <a href="https://mempool.space/" target="_blank" rel="noreferrer">mempool.space</a> · API pubblica Bitcoin</span><span>Monitor in sola lettura · nessun wallet connesso</span></footer>
+    <footer class="page-footer"><span>MINER / OS <i>·</i> PROTOCOLLO AURORA</span><span>Una galassia immaginaria, una partita alla volta.</span></footer>
   </main>
+  <dialog id="resetDialog" class="reset-dialog"><form method="dialog"><span class="dialog-icon">↺</span><h2>Ripartire da zero?</h2><p>La flotta e tutti i progressi di questa partita verranno cancellati.</p><div class="dialog-actions"><button class="quiet-button" value="cancel">Continua a giocare</button><button id="confirmReset" class="danger-button" value="confirm">Nuova partita</button></div></form></dialog>
   <script src="app.js"></script>
 </body>
 </html>
