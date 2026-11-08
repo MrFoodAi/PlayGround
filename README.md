@@ -16,3 +16,9 @@
 - 👤 [Explore the creator's projects](https://go.ondev.store/MrFoodAi).
 - 🌍 [Create with OMGithub](https://go.ondev.store/).
 <!-- omgithub:readme:end -->
+
+## MINER // Protocollo Aurora
+
+Un idle game in italiano in cui gestisci una flotta di bot e scansioni sei reti immaginarie. Accumula ricompense virtuali, metti in pausa i bot e attiva/disattiva l'instradamento verso il wallet demo. I progressi vengono salvati localmente nel browser.
+
+**È solo una simulazione di gioco:** non esegue mining, non si collega a reti blockchain e non richiede né trasferisce criptovalute o fondi reali.
