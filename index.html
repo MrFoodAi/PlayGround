@@ -24,6 +24,11 @@
           </div>
         </div>
 
+        <nav class="view-nav" aria-label="Navigazione principale">
+          <button class="nav-button active" type="button" data-view="gameView" aria-current="page">Gioco</button>
+          <button class="nav-button" type="button" data-view="liveView">Dati live</button>
+          <button class="nav-button" type="button" data-view="settingsView">Impostazioni</button>
+        </nav>
         <div class="topbar-actions">
           <button id="resetBtn" class="ghost-button" type="button">Reset</button>
           <div id="routeStatus" class="route-pill route-on" aria-live="polite">
@@ -32,6 +37,7 @@
         </div>
       </header>
 
+      <div id="gameView" class="app-view game-screen">
       <main class="game-layout">
         <section class="panel networks-panel">
           <div class="panel-header">
@@ -141,6 +147,102 @@
           </ul>
         </div>
       </aside>
+      </div>
+
+      <main id="liveView" class="app-view live-view" hidden>
+        <section class="panel live-intro">
+          <div class="eyebrow">ESPLORA DATI PUBBLICI</div>
+          <h1>Rete reale, dati verificabili<span class="accent-dot">.</span></h1>
+          <p>Consulta blockchain Bitcoin e mercati crypto tramite API pubbliche. Solo lettura: nessun wallet viene connesso e nessuna operazione viene eseguita.</p>
+          <div id="liveUpdated" class="mini-stat">Connessione ai dati live…</div>
+        </section>
+
+        <section class="live-columns">
+          <article class="panel">
+            <div class="panel-header">
+              <div><div class="eyebrow">RICERCA ON-CHAIN · BITCOIN</div><h2>Esplora la blockchain</h2></div>
+            </div>
+            <form id="chainSearchForm" class="search-form">
+              <label class="sr-only" for="chainSearchInput">Hash blocco, transazione, altezza o indirizzo Bitcoin</label>
+              <input id="chainSearchInput" type="search" maxlength="100" placeholder="Hash, altezza blocco o indirizzo BTC" autocomplete="off" required>
+              <button class="primary-button" type="submit">Cerca</button>
+            </form>
+            <p class="hint">Ricerca in sola lettura su mempool.space.</p>
+            <div id="chainSearchResult" class="result-box" aria-live="polite">Inserisci un identificativo Bitcoin per consultare i dati pubblici.</div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div><div class="eyebrow">MERCATI · QUOTAZIONI</div><h2>Cerca criptovalute</h2></div>
+            </div>
+            <form id="cryptoSearchForm" class="search-form">
+              <label class="sr-only" for="cryptoSearchInput">Nome o ticker della criptovaluta</label>
+              <input id="cryptoSearchInput" type="search" maxlength="80" placeholder="Es. bitcoin, ETH, solana" autocomplete="off" required>
+              <button class="primary-button" type="submit">Cerca</button>
+            </form>
+            <p class="hint">Prezzo e variazione percentuale delle ultime 24 ore. Fonte: CoinGecko.</p>
+            <div id="cryptoSearchResult" class="result-list" aria-live="polite"><div class="result-box">Cerca una crypto per vedere dati di mercato reali.</div></div>
+          </article>
+        </section>
+
+        <section class="panel mining-panel">
+          <div class="panel-header">
+            <div><div class="eyebrow">CALCOLO INDICATIVO · BITCOIN</div><h2>Stima teorica delle 24 ore</h2></div>
+            <span class="live-badge">METRICHE LIVE</span>
+          </div>
+          <div class="estimate-grid">
+            <div class="estimate-card"><span>Ricavo lordo stimato / 24h</span><strong id="grossEstimate">—</strong></div>
+            <div class="estimate-card"><span>Energia stimata / 24h</span><strong id="energyEstimate">—</strong></div>
+            <div class="estimate-card"><span>Netto teorico / 24h</span><strong id="netEstimate">—</strong></div>
+            <div class="estimate-card"><span>BTC teorici / 24h</span><strong id="btcEstimate">—</strong></div>
+          </div>
+          <p id="estimateStatus" class="hint">Inserisci hashrate e costi nelle Impostazioni. La stima usa hashrate di rete e prezzo BTC live.</p>
+          <p class="notice">Non sono guadagni reali né garantiti: l’app non esegue mining. La stima semplificata applica la fee del pool configurata e sottrae il costo energia; non include fee di transazione, variabilità dei blocchi, hardware, tasse o downtime e ipotizza 144 blocchi al giorno.</p>
+        </section>
+      </main>
+
+      <main id="settingsView" class="app-view settings-view" hidden>
+        <section class="panel settings-heading">
+          <div class="eyebrow">CONFIGURAZIONE LOCALE</div>
+          <h1>Impostazioni<span class="accent-dot">.</span></h1>
+          <p>Le preferenze restano salvate solo in questo browser. Non inserire mai seed phrase o chiavi private.</p>
+        </section>
+        <div class="settings-grid">
+          <section class="panel settings-card">
+            <div class="eyebrow">WALLET · SOLA LETTURA</div>
+            <h2>Preferenze wallet</h2>
+            <label for="currencySetting">Valuta per prezzi e stime</label>
+            <select id="currencySetting">
+              <option value="eur">Euro (EUR)</option>
+              <option value="usd">Dollaro USA (USD)</option>
+            </select>
+            <label for="walletAddressSetting">Indirizzo pubblico Bitcoin (facoltativo)</label>
+            <input id="walletAddressSetting" type="text" maxlength="90" placeholder="bc1… / 1… / 3…" autocomplete="off" spellcheck="false">
+            <p class="hint">Solo indirizzi pubblici: verrà mostrato il saldo on-chain. Nessuna firma o transazione.</p>
+            <button id="checkWalletBtn" class="secondary-button" type="button">Verifica saldo pubblico</button>
+            <div id="walletCheckResult" class="result-box" aria-live="polite">Nessun indirizzo verificato.</div>
+            <div class="setting-toggle"><span>Instradamento wallet demo del gioco</span><button id="settingsRouteBtn" class="secondary-button" type="button">—</button></div>
+            <p class="hint">Questo instradamento modifica solo i crediti fittizi del gioco e non invia crypto.</p>
+          </section>
+
+          <section class="panel settings-card">
+            <div class="eyebrow">MINING · PARAMETRI STIMA</div>
+            <h2>Configurazione mining</h2>
+            <p class="hint">Parametri usati esclusivamente per calcolare una stima teorica BTC di 24 ore.</p>
+            <label for="hashrateSetting">Hashrate del tuo hardware (TH/s)</label>
+            <input id="hashrateSetting" type="number" min="0" max="100000000" step="any" inputmode="decimal" placeholder="0">
+            <label for="powerSetting">Consumo elettrico (Watt)</label>
+            <input id="powerSetting" type="number" min="0" max="10000000" step="any" inputmode="decimal" placeholder="0">
+            <label for="electricitySetting">Costo energia (per kWh)</label>
+            <input id="electricitySetting" type="number" min="0" max="100000" step="any" inputmode="decimal" placeholder="0,25">
+            <label for="poolFeeSetting">Fee pool (%)</label>
+            <input id="poolFeeSetting" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="1">
+            <button id="saveSettingsBtn" class="primary-button" type="button">Salva impostazioni</button>
+            <p id="settingsSaveStatus" class="hint" aria-live="polite">Impostazioni non salvate.</p>
+          </section>
+        </div>
+        <p class="notice">Sicurezza: l’app non chiede credenziali, seed phrase o chiavi private. I saldi e i mercati sono dati pubblici; il wallet demo non è un portafoglio reale.</p>
+      </main>
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
