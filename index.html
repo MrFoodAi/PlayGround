@@ -1,45 +1,150 @@
 <!doctype html>
 <html lang="it">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090b12">
-  <meta name="description" content="Monitor Bitcoin con dati pubblici reali e analisi AI locale opzionale.">
-  <title>MINER // Monitor Bitcoin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <main class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="/" aria-label="Miner monitor home"><span class="brand-mark"><i></i><i></i><i></i></span><span>mine<span class="brand-light">/os</span><small>MONITOR BITCOIN</small></span></a>
-      <div class="topbar-right"><span id="connection" class="connection"><i></i> CONNESSIONE IN CORSO</span><button id="refreshBtn" class="refresh-button" type="button">↻ <span>Aggiorna</span></button></div>
-    </header>
-    <section class="intro">
-      <div><div class="eyebrow"><span class="eyebrow-line"></span> DATI DI RETE IN TEMPO REALE</div><h1>La rete Bitcoin<span class="period">.</span></h1><p class="heading-sub">Metriche pubbliche della blockchain, senza stime di guadagno o saldi inventati.</p></div>
-      <div class="updated">ULTIMO AGGIORNAMENTO <b id="updatedAt">—</b></div>
-    </section>
-    <div id="errorBanner" class="error-banner" role="status" hidden></div>
-    <section class="stats-grid" aria-label="Metriche reali Bitcoin">
-      <article class="stat-card"><div class="stat-top"><span>Altezza blocco</span><span class="stat-icon">▤</span></div><div class="stat-value"><span id="height">—</span></div><div class="stat-foot">Ultimo blocco pubblicato</div></article>
-      <article class="stat-card"><div class="stat-top"><span>Transazioni nel blocco</span><span class="stat-icon">⇄</span></div><div class="stat-value"><span id="txCount">—</span></div><div class="stat-foot">Blocco più recente</div></article>
-      <article class="stat-card"><div class="stat-top"><span>Transazioni in attesa</span><span class="stat-icon">◷</span></div><div class="stat-value"><span id="mempoolCount">—</span></div><div class="stat-foot">Mempool pubblico</div></article>
-      <article class="stat-card"><div class="stat-top"><span>Commissione consigliata</span><span class="stat-icon">₿</span></div><div class="stat-value"><span id="feeRate">—</span><small>sat/vB</small></div><div class="stat-foot">Priorità alta · API pubblica</div></article>
-    </section>
-    <section class="main-grid">
-      <article class="panel block-panel"><div class="panel-header"><div><div class="section-kicker">ULTIMO BLOCCO</div><h2>Stato della blockchain</h2></div><span class="live-badge"><i></i> DATI LIVE</span></div>
-        <dl class="details"><div><dt>Hash</dt><dd id="blockHash">—</dd></div><div><dt>Orario blocco</dt><dd id="blockTime">—</dd></div><div><dt>Dimensione</dt><dd id="blockSize">—</dd></div><div><dt>Fee totali nel mempool</dt><dd id="mempoolFees">—</dd></div><div><dt>Tariffe (sat/vB)</dt><dd id="feeSummary">—</dd></div></dl>
-      </article>
-      <article class="panel ai-panel"><div class="panel-header"><div><div class="section-kicker">ASSISTENTE LOCALE</div><h2>Analisi AI</h2></div><span id="aiBadge" class="ai-badge">IN ATTESA</span></div>
-        <p id="aiMessage" class="ai-message">L’assistente analizzerà i dati reali quando un modello Ollama locale è disponibile sul server.</p>
-        <div class="ai-meta"><span>Modello: <b id="aiModel">non configurato</b></span><span id="aiUpdated">Nessuna analisi</span></div>
-        <p class="ai-disclaimer">L’AI descrive solo metriche on-chain: non esegue mining, non invia transazioni e non fornisce previsioni di profitto.</p>
-      </article>
-    </section>
-    <footer class="page-footer"><span>FONTE: <a href="https://mempool.space/" target="_blank" rel="noreferrer">mempool.space</a> · API pubblica Bitcoin</span><span>Monitor in sola lettura · nessun wallet connesso</span></footer>
-  </main>
-  <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#070d17">
+    <meta
+      name="description"
+      content="MINER // Protocollo Aurora — un idle game di gestione flotta e reti immaginarie."
+    >
+    <title>MINER // Protocollo Aurora</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="brand-text">
+            <strong>MINER</strong>
+            <small>// PROTOCOLLO AURORA</small>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button id="resetBtn" class="ghost-button" type="button">Reset</button>
+          <div id="routeStatus" class="route-pill route-on" aria-live="polite">
+            <span class="dot"></span> WALLET DEMO ON
+          </div>
+        </div>
+      </header>
+
+      <main class="game-layout">
+        <section class="panel networks-panel">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">RETI DISPONIBILI</div>
+              <h2>Scansione</h2>
+            </div>
+            <div id="networkProgress" class="mini-stat">1/6 reti</div>
+          </div>
+
+          <div id="networkList" class="network-list" aria-live="polite"></div>
+        </section>
+
+        <section class="panel active-panel">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">SELEZIONE ATTIVA</div>
+              <h2 id="activeNetworkName">Asterion</h2>
+            </div>
+            <button id="scanBtn" class="primary-button" type="button">Scansiona rete</button>
+          </div>
+
+          <div class="active-network-card" id="activeNetworkCard">
+            <div class="network-header">
+              <div>
+                <div id="networkSignal" class="signal">SIGNALE STABILE</div>
+                <div id="networkReward" class="reward">+8.0 cr/sec</div>
+              </div>
+              <div id="networkIndex" class="network-index">01</div>
+            </div>
+
+            <p id="networkDescription" class="network-description">
+              Fino al 91% di sfide gestibili in modo sicuro, con canali di routing leggeri e costi bassi.
+            </p>
+
+            <div class="metrics-row">
+              <div>
+                <span>Rischio</span>
+                <strong id="networkRisk">Basso</strong>
+              </div>
+              <div>
+                <span>Potenza base</span>
+                <strong id="networkPower">8.0</strong>
+              </div>
+              <div>
+                <span>Unlock</span>
+                <strong id="networkUnlock">0 cr</strong>
+              </div>
+            </div>
+
+            <div class="action-row">
+              <button id="hireBtn" class="primary-button" type="button">Assumi bot</button>
+              <button id="routeBtn" class="secondary-button" type="button">Instradamento wallet</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel fleet-panel">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">FLOTTA</div>
+              <h2>Bot in servizio</h2>
+            </div>
+          </div>
+
+          <div id="botList" class="bot-list" aria-live="polite"></div>
+        </section>
+
+        <section class="panel upgrades-panel">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">INGEGNERIA</div>
+              <h2>Upgrade</h2>
+            </div>
+          </div>
+
+          <div id="upgradeList" class="upgrade-list" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <aside class="sidebar">
+        <div class="panel stat-panel">
+          <div class="eyebrow">PORTAFOGLIO</div>
+          <div class="stat-stack">
+            <div class="stat-item">
+              <span>Disponibile</span>
+              <strong id="creditsStat">0</strong>
+            </div>
+            <div class="stat-item">
+              <span>Wallet demo</span>
+              <strong id="walletStat">0</strong>
+            </div>
+            <div class="stat-item">
+              <span>Totale raccolto</span>
+              <strong id="totalStat">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel system-panel">
+          <div class="eyebrow">STATO SISTEMA</div>
+          <ul class="system-list">
+            <li><span>Bot online</span><strong id="onlineBots">0</strong></li>
+            <li><span>Reti sbloccate</span><strong id="unlockedCount">1</strong></li>
+            <li><span>Produttività</span><strong id="prodRate">0 cr/s</strong></li>
+            <li><span>Stato</span><strong id="statusBadge">IN ATTESA</strong></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+  </body>
 </html>
